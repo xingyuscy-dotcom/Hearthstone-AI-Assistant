@@ -1,0 +1,40 @@
+{
+  "name": "hearthstone-ai-overlay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "炉石决策助手 Overwolf Electron 浮窗原型",
+  "main": "dist/main/main.js",
+  "author": {
+    "name": "Hearthstone AI Assistant"
+  },
+  "overwolf": {
+    "packages": [
+      "overlay"
+    ]
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build:renderer": "vite build",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build": "npm run build:renderer && npm run build:main",
+    "start:floating": "electron dist/main/floating.js",
+    "start:overlay": "ow-electron . --owepm-packages-url=https://electronapi-qa.overwolf.com/packages",
+    "start:preview": "ow-electron . --preview"
+  },
+  "dependencies": {
+    "@overwolf/ow-electron": "^34.5.7",
+    "@overwolf/ow-electron-packages-types": "^0.0.16",
+    "get-windows": "^9.3.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.4.0",
+    "electron": "^34.5.6",
+    "typescript": "^5.8.0",
+    "vite": "^6.3.0"
+  }
+}

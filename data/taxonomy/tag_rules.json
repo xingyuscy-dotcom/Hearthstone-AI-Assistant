@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "standard_sets": {
+    "CORE": {
+      "name_zh": "核心系列",
+      "name_en": "Core",
+      "release_year": 2026,
+      "year_group": "2026_SCARAB",
+      "category": "CORE"
+    },
+    "EVENT": {
+      "name_zh": "活动系列",
+      "name_en": "Event",
+      "release_year": null,
+      "year_group": "SPECIAL",
+      "category": "SPECIAL"
+    },
+    "EMERALD_DREAM": {
+      "name_zh": "漫游翡翠梦境",
+      "name_en": "Into the Emerald Dream",
+      "release_year": 2025,
+      "year_group": "2025_RAPTOR",
+      "category": "EXPANSION"
+    },
+    "THE_LOST_CITY": {
+      "name_zh": "安戈洛龟途",
+      "name_en": "The Lost City of Un'Goro",
+      "release_year": 2025,
+      "year_group": "2025_RAPTOR",
+      "category": "EXPANSION"
+    },
+    "TIME_TRAVEL": {
+      "name_zh": "穿越时间流",
+      "name_en": "Across the Timeways",
+      "release_year": 2025,
+      "year_group": "2025_RAPTOR",
+      "category": "EXPANSION"
+    },
+    "CATACLYSM": {
+      "name_zh": "大地的裂变",
+      "name_en": "CATACLYSM",
+      "release_year": 2026,
+      "year_group": "2026_SCARAB",
+      "category": "EXPANSION_AND_CLASS_SET"
+    }
+  },
+  "excluded_preload_sets": [
+    "ESCAPEFROM_VIOLET_HOLD"
+  ],
+  "effect_rules": {
+    "DAMAGE": ["\\bdamage\\b"],
+    "HEAL": ["restore .+ health", "\\bheal\\b"],
+    "DRAW": ["\\bdraw\\b"],
+    "CARD_GENERATION": ["\\bdiscover\\b", "add .+ to your hand", "get a random"],
+    "SUMMON": ["\\bsummon\\b"],
+    "DESTROY": ["\\bdestroy\\b"],
+    "TRANSFORM": ["\\btransform\\b"],
+    "SILENCE": ["\\bsilence\\b"],
+    "BUFF": ["give .+ \\+[0-9]", "\\+[0-9]+/\\+[0-9]+"],
+    "ARMOR": ["\\barmor\\b"],
+    "MANA": ["mana crystal", "refresh .+ mana", "costs? \\([0-9]+\\) less"],
+    "DISCARD": ["\\bdiscard\\b"],
+    "SHUFFLE": ["\\bshuffle\\b"],
+    "RETURN_TO_HAND": ["return .+ to .+ hand"],
+    "COPY": ["\\bcopy\\b", "copies of"],
+    "RESURRECT": ["\\bresurrect\\b"],
+    "FREEZE": ["\\bfreeze\\b", "\\bfrozen\\b"],
+    "SECRET": ["\\bsecret\\b"],
+    "WEAPON": ["\\bequip\\b"],
+    "AOE": ["all enemy minions", "all minions", "all enemies", "all characters"]
+  },
+  "strategy_from_effects": {
+    "REMOVAL": ["DAMAGE", "DESTROY", "TRANSFORM", "SILENCE"],
+    "BOARD_CLEAR": ["AOE"],
+    "CYCLE": ["DRAW"],
+    "RESOURCE_GENERATION": ["CARD_GENERATION", "COPY"],
+    "BOARD_DEVELOPMENT": ["SUMMON", "BUFF"],
+    "SURVIVAL": ["HEAL", "ARMOR"],
+    "DISRUPTION": ["DISCARD", "RETURN_TO_HAND", "FREEZE"]
+  }
+}

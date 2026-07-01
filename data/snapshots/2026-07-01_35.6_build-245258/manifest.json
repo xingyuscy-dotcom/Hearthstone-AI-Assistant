@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "snapshot_id": "2026-07-01_35.6_build-245258",
+  "snapshot_date": "2026-07-01",
+  "patch": "35.6",
+  "build": 245258,
+  "format": "STANDARD",
+  "generated_at_utc": "2026-07-01T10:53:37.770513+00:00",
+  "source": {
+    "provider": "HearthstoneJSON",
+    "base_url": "https://api.hearthstonejson.com/v1/245258/",
+    "raw_files": {
+      "zhCN": {
+        "path": "data\\raw\\245258\\zhCN.json",
+        "sha256": "5ed98d85141a084790963fc1bd755620ae04bc5cb35b5dd37fd3122b036f23e3"
+      },
+      "enUS": {
+        "path": "data\\raw\\245258\\enUS.json",
+        "sha256": "451dc144591d454d54c23f8f79a352ae30dcdd0910b82e811452155d95a02d02"
+      }
+    }
+  },
+  "included_sets": {
+    "CORE": {
+      "name_zh": "核心系列",
+      "name_en": "Core",
+      "release_year": 2026,
+      "year_group": "2026_SCARAB",
+      "category": "CORE"
+    },
+    "EVENT": {
+      "name_zh": "活动系列",
+      "name_en": "Event",
+      "release_year": null,
+      "year_group": "SPECIAL",
+      "category": "SPECIAL"
+    },
+    "EMERALD_DREAM": {
+      "name_zh": "漫游翡翠梦境",
+      "name_en": "Into the Emerald Dream",
+      "release_year": 2025,
+      "year_group": "2025_RAPTOR",
+      "category": "EXPANSION"
+    },
+    "THE_LOST_CITY": {
+      "name_zh": "安戈洛龟途",
+      "name_en": "The Lost City of Un'Goro",
+      "release_year": 2025,
+      "year_group": "2025_RAPTOR",
+      "category": "EXPANSION"
+    },
+    "TIME_TRAVEL": {
+      "name_zh": "穿越时间流",
+      "name_en": "Across the Timeways",
+      "release_year": 2025,
+      "year_group": "2025_RAPTOR",
+      "category": "EXPANSION"
+    },
+    "CATACLYSM": {
+      "name_zh": "大地的裂变",
+      "name_en": "CATACLYSM",
+      "release_year": 2026,
+      "year_group": "2026_SCARAB",
+      "category": "EXPANSION_AND_CLASS_SET"
+    }
+  },
+  "excluded_preload_sets": [
+    "ESCAPEFROM_VIOLET_HOLD"
+  ],
+  "counts": {
+    "cards": 1017,
+    "by_set": {
+      "CATACLYSM": 164,
+      "CORE": 289,
+      "EMERALD_DREAM": 183,
+      "EVENT": 15,
+      "THE_LOST_CITY": 183,
+      "TIME_TRAVEL": 183
+    },
+    "by_class": {
+      "DEATHKNIGHT": 89,
+      "DEMONHUNTER": 71,
+      "DRUID": 76,
+      "HUNTER": 75,
+      "MAGE": 75,
+      "NEUTRAL": 235,
+      "PALADIN": 78,
+      "PRIEST": 68,
+      "ROGUE": 72,
+      "SHAMAN": 71,
+      "WARLOCK": 72,
+      "WARRIOR": 72
+    },
+    "by_type": {
+      "HERO": 2,
+      "LOCATION": 15,
+      "MINION": 631,
+      "SPELL": 342,
+      "WEAPON": 27
+    }
+  },
+  "validation": {
+    "duplicate_ids": 0,
+    "duplicate_dbf_ids": 0,
+    "missing_zh_cn": []
+  }
+}
