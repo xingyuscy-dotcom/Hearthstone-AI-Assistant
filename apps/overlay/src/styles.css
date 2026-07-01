@@ -14,7 +14,7 @@ html,
 body,
 #root {
   width: 100%;
-  min-height: 100%;
+  height: 100%;
   margin: 0;
 }
 
@@ -29,14 +29,16 @@ button {
 
 .overlay-stage,
 .preview-stage {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 12px;
+  width: 100%;
+  height: 100%;
+  padding: 0;
 }
 
 .preview-stage {
   min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 12px;
   background:
     radial-gradient(circle at 35% 20%, rgba(67, 83, 94, 0.26), transparent 32%),
     radial-gradient(circle at 70% 82%, rgba(40, 62, 72, 0.23), transparent 30%),
@@ -44,7 +46,8 @@ button {
 }
 
 .assistant-panel {
-  width: min(380px, calc(100vw - 24px));
+  width: 100%;
+  height: 100%;
   color: #eee7db;
   background: linear-gradient(155deg, rgba(20, 24, 27, 0.97), rgba(7, 11, 16, 0.96));
   border: 1px solid rgba(184, 137, 72, 0.74);
@@ -57,6 +60,7 @@ button {
   position: relative;
   overflow: hidden;
   cursor: move;
+  -webkit-app-region: drag;
 }
 
 .assistant-panel::before,
@@ -164,6 +168,7 @@ button {
   border-radius: 6px;
   background: rgba(20, 18, 16, 0.72);
   cursor: pointer;
+  -webkit-app-region: no-drag;
 }
 
 .window-control:hover,
@@ -376,6 +381,7 @@ button {
   border-radius: 9px;
   background: rgba(17, 24, 34, 0.75);
   cursor: pointer;
+  -webkit-app-region: no-drag;
   transition: border-color 160ms ease, background 160ms ease;
 }
 

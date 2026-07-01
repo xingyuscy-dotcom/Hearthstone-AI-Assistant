@@ -21,6 +21,7 @@ const rendererPath = path.join(__dirname, "../renderer/index.html");
 const preloadPath = path.join(__dirname, "preload.js");
 const runtimeLogPath = path.join(process.cwd(), "floating-runtime.log");
 const loadGetWindows = new Function("return import('get-windows')") as () => Promise<GetWindowsApi>;
+const overlaySize = { width: 380, height: 690 };
 
 let floatingWindow: BrowserWindow | null = null;
 let manuallyVisible = true;
@@ -29,7 +30,7 @@ let overlayMode: OverlayMode = "standalone";
 let lastGameBounds: WindowInfo["bounds"] | null = null;
 let userOffset: { x: number; y: number } | null = null;
 let standaloneBounds: WindowInfo["bounds"] | null = null;
-let dragStart: { cursorX: number; cursorY: number; windowX: number; windowY: number } | null = null;
+let clampingWindow = false;
 
 writeFileSync(runtimeLogPath, "", "utf8");
 
@@ -83,8 +84,8 @@ function setOverlayMode(nextMode: OverlayMode) {
 
 function getDefaultStandaloneBounds() {
   const { workArea } = screen.getPrimaryDisplay();
-  const width = 404;
-  const height = Math.min(742, Math.max(620, workArea.height - 48));
+  const width = overlaySize.width;
+  const height = Math.min(overlaySize.height, Math.max(620, workArea.height - 48));
 
   return {
     x: Math.round(workArea.x + (workArea.width - width) / 2),
@@ -96,8 +97,8 @@ function getDefaultStandaloneBounds() {
 
 function createFloatingWindow() {
   floatingWindow = new BrowserWindow({
-    width: 404,
-    height: 742,
+    width: overlaySize.width,
+    height: overlaySize.height,
     show: false,
     frame: false,
     transparent: true,
@@ -118,52 +119,48 @@ function createFloatingWindow() {
   void floatingWindow.loadURL(pathToFileURL(rendererPath).toString());
   floatingWindow.webContents.on("did-finish-load", sendModeToRenderer);
   floatingWindow.on("move", () => {
-    if (!floatingWindow) return;
-    const currentBounds = floatingWindow.getBounds();
+    if (!floatingWindow || clampingWindow) return;
+    const bounds = floatingWindow.getBounds();
 
-    if (overlayMode === "standalone") {
-      standaloneBounds = currentBounds;
+    if (overlayMode === "attached" && lastGameBounds) {
+      const clamped = clampOverlayBounds(bounds);
+      if (bounds.x !== clamped.x || bounds.y !== clamped.y) {
+        clampingWindow = true;
+        floatingWindow.setBounds(clamped, false);
+        clampingWindow = false;
+        userOffset = {
+          x: clamped.x - lastGameBounds.x,
+          y: clamped.y - lastGameBounds.y,
+        };
+        return;
+      }
+
+      userOffset = {
+        x: bounds.x - lastGameBounds.x,
+        y: bounds.y - lastGameBounds.y,
+      };
       return;
     }
 
-    if (!lastGameBounds) return;
-    const maxX = Math.max(12, lastGameBounds.width - currentBounds.width - 12);
-    const maxY = Math.max(12, lastGameBounds.height - currentBounds.height - 12);
-    userOffset = {
-      x: Math.min(maxX, Math.max(12, currentBounds.x - lastGameBounds.x)),
-      y: Math.min(maxY, Math.max(12, currentBounds.y - lastGameBounds.y)),
-    };
-  });
-  floatingWindow.on("moved", () => {
-    if (!floatingWindow || !lastGameBounds || !userOffset) return;
-    const currentBounds = floatingWindow.getBounds();
-    const clampedBounds = {
-      ...currentBounds,
-      x: lastGameBounds.x + userOffset.x,
-      y: lastGameBounds.y + userOffset.y,
-    };
-    if (currentBounds.x !== clampedBounds.x || currentBounds.y !== clampedBounds.y) {
-      floatingWindow.setBounds(clampedBounds, false);
-    }
-    logRuntime("overlay-moved", { overlayBounds: clampedBounds });
+    standaloneBounds = bounds;
   });
   floatingWindow.on("closed", () => {
     floatingWindow = null;
   });
 }
 
-function clampOverlayPosition(x: number, y: number) {
-  if (!floatingWindow || overlayMode !== "attached" || !lastGameBounds) return { x, y };
-  const bounds = floatingWindow.getBounds();
+function clampOverlayBounds(bounds: WindowInfo["bounds"]) {
+  if (overlayMode !== "attached" || !lastGameBounds) return bounds;
+
+  const minX = lastGameBounds.x + 12;
+  const minY = lastGameBounds.y + 12;
+  const maxX = lastGameBounds.x + lastGameBounds.width - bounds.width - 12;
+  const maxY = lastGameBounds.y + lastGameBounds.height - bounds.height - 12;
+
   return {
-    x: Math.min(
-      lastGameBounds.x + lastGameBounds.width - bounds.width - 12,
-      Math.max(lastGameBounds.x + 12, x),
-    ),
-    y: Math.min(
-      lastGameBounds.y + lastGameBounds.height - bounds.height - 12,
-      Math.max(lastGameBounds.y + 12, y),
-    ),
+    ...bounds,
+    x: Math.min(maxX, Math.max(minX, bounds.x)),
+    y: Math.min(maxY, Math.max(minY, bounds.y)),
   };
 }
 
@@ -171,33 +168,6 @@ function registerDragHandlers() {
   ipcMain.on("overlay-close", () => {
     logRuntime("manual-close");
     app.quit();
-  });
-
-  ipcMain.on("overlay-drag-start", (_event, point: { x: number; y: number }) => {
-    if (!floatingWindow) return;
-    const bounds = floatingWindow.getBounds();
-    dragStart = {
-      cursorX: point.x,
-      cursorY: point.y,
-      windowX: bounds.x,
-      windowY: bounds.y,
-    };
-  });
-
-  ipcMain.on("overlay-drag-move", (_event, point: { x: number; y: number }) => {
-    if (!floatingWindow || !dragStart) return;
-    const next = clampOverlayPosition(
-      dragStart.windowX + point.x - dragStart.cursorX,
-      dragStart.windowY + point.y - dragStart.cursorY,
-    );
-    floatingWindow.setPosition(Math.round(next.x), Math.round(next.y), false);
-  });
-
-  ipcMain.on("overlay-drag-end", () => {
-    if (floatingWindow && dragStart) {
-      logRuntime("overlay-dragged", { overlayBounds: floatingWindow.getBounds() });
-    }
-    dragStart = null;
   });
 }
 
@@ -257,8 +227,8 @@ async function syncWithHearthstone() {
       height: Math.round(physicalBounds.height / scaleFactor),
     };
     lastGameBounds = gameBounds;
-    const width = Math.min(404, Math.max(320, gameBounds.width - 24));
-    const height = Math.min(742, Math.max(620, gameBounds.height - 24));
+    const width = Math.min(overlaySize.width, Math.max(320, gameBounds.width - 24));
+    const height = Math.min(overlaySize.height, Math.max(620, gameBounds.height - 24));
     const maxOffsetX = Math.max(12, gameBounds.width - width - 12);
     const maxOffsetY = Math.max(12, gameBounds.height - height - 12);
     const defaultOffset = {
