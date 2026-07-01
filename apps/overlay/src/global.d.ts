@@ -6,5 +6,6 @@ type OverlayModePayload = {
 interface Window {
   hearthstoneOverlay?: {
     onModeChanged(callback: (payload: OverlayModePayload) => void): () => void;
+    close(): void;
   };
 }

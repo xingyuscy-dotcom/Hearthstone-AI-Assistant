@@ -25,6 +25,7 @@ body {
 
 button {
   font: inherit;
+  -webkit-app-region: no-drag;
 }
 
 .overlay-stage,
@@ -147,6 +148,7 @@ button {
 .window-controls {
   display: flex;
   align-items: center;
+  -webkit-app-region: no-drag;
 }
 
 .header-actions {
@@ -207,6 +209,7 @@ button {
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
   font-size: 12px;
   pointer-events: none;
+  -webkit-app-region: no-drag;
 }
 
 .ornament {
@@ -233,13 +236,48 @@ button {
   padding-left: 8px;
 }
 
+.action-scroll {
+  max-height: 258px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 5px;
+  border: 1px solid rgba(100, 140, 130, 0.42);
+  border-radius: 10px;
+  background:
+    linear-gradient(rgba(15, 36, 38, 0.94), transparent 24px) top,
+    linear-gradient(transparent, rgba(15, 36, 38, 0.94) 24px) bottom,
+    linear-gradient(135deg, rgba(18, 58, 57, 0.36), rgba(10, 21, 26, 0.52));
+  background-repeat: no-repeat;
+  background-size: 100% 34px, 100% 34px, 100% 100%;
+  scrollbar-color: rgba(214, 163, 93, 0.68) rgba(8, 15, 18, 0.62);
+  scrollbar-width: thin;
+  -webkit-app-region: no-drag;
+}
+
+.action-scroll:focus-visible {
+  outline: 1px solid rgba(80, 210, 183, 0.72);
+  outline-offset: 2px;
+}
+
+.action-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.action-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(8, 15, 18, 0.62);
+}
+
+.action-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(8, 15, 18, 0.62);
+  border-radius: 999px;
+  background: rgba(214, 163, 93, 0.82);
+}
+
 .action-list {
   list-style: none;
   padding: 4px 10px;
   margin: 0;
-  border: 1px solid rgba(100, 140, 130, 0.42);
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(18, 58, 57, 0.36), rgba(10, 21, 26, 0.52));
 }
 
 .action-step {

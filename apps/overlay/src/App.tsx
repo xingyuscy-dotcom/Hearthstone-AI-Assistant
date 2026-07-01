@@ -1,11 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { ActionStep } from "./components/ActionStep";
 
-const actions = [
+const actionSamples = [
   { title: "使用英雄技能", detail: "先稳定生命值", kind: "power" as const },
-  { title: "打出卡牌", detail: "暮光侍僧", kind: "card" as const },
+  { title: "打出卡牌", detail: "暮光侍僧，建立场面压力", kind: "card" as const },
   { title: "攻击随从", detail: "处理敌方低生命目标", kind: "attack" as const },
 ];
+
+const actions = Array.from({ length: 30 }, (_, index) => {
+  const sample = actionSamples[index % actionSamples.length];
+  return {
+    ...sample,
+    title: `${sample.title} ${index + 1}`,
+    detail: `测试步骤 ${index + 1}：${sample.detail}`,
+  };
+});
 
 export function App() {
   const [seconds, setSeconds] = useState(72);
@@ -73,6 +82,7 @@ export function App() {
                 aria-label="关闭浮窗"
                 title="关闭浮窗"
                 data-overlay-action="close"
+                onClick={() => window.hearthstoneOverlay?.close()}
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="m6 6 12 12M18 6 6 18" />
@@ -88,11 +98,13 @@ export function App() {
 
         <section className="recommendation">
           <h2>推荐操作</h2>
-          <ol className="action-list">
-            {actions.map((action, index) => (
-              <ActionStep key={action.title} index={index + 1} {...action} />
-            ))}
-          </ol>
+          <div className="action-scroll" role="region" aria-label="推荐操作步骤" tabIndex={0}>
+            <ol className="action-list">
+              {actions.map((action, index) => (
+                <ActionStep key={action.title} index={index + 1} {...action} />
+              ))}
+            </ol>
+          </div>
         </section>
 
         <section className="confidence" aria-label="置信度 82%">

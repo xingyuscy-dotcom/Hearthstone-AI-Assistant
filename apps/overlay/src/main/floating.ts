@@ -167,6 +167,7 @@ function clampOverlayBounds(bounds: WindowInfo["bounds"]) {
 function registerDragHandlers() {
   ipcMain.on("overlay-close", () => {
     logRuntime("manual-close");
+    floatingWindow?.destroy();
     app.quit();
   });
 }

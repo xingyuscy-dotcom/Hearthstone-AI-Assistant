@@ -13,6 +13,9 @@ contextBridge.exposeInMainWorld("hearthstoneOverlay", {
     ipcRenderer.on("overlay-mode-changed", listener);
     return () => ipcRenderer.removeListener("overlay-mode-changed", listener);
   },
+  close() {
+    ipcRenderer.send("overlay-close");
+  },
 });
 
 window.addEventListener("DOMContentLoaded", () => {
