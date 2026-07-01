@@ -3,6 +3,10 @@ import { contextBridge, ipcRenderer } from "electron";
 type OverlayModePayload = {
   mode: "standalone" | "attached";
   label: string;
+  bounds: {
+    width: number;
+    height: number;
+  };
 };
 
 contextBridge.exposeInMainWorld("hearthstoneOverlay", {
@@ -25,4 +29,27 @@ window.addEventListener("DOMContentLoaded", () => {
       ipcRenderer.send("overlay-close");
     }
   });
+
+  document.addEventListener("pointerdown", (event) => {
+    const target = event.target;
+    if (
+      event.button !== 0 ||
+      !(target instanceof HTMLElement) ||
+      !target.closest(".panel-header") ||
+      target.closest("button, a, input, textarea, select")
+    ) {
+      return;
+    }
+
+    ipcRenderer.send("overlay-drag-start");
+    event.preventDefault();
+  });
+
+  const endDrag = () => {
+    ipcRenderer.send("overlay-drag-end");
+  };
+
+  document.addEventListener("pointerup", endDrag);
+  document.addEventListener("pointercancel", endDrag);
+  window.addEventListener("blur", endDrag);
 });

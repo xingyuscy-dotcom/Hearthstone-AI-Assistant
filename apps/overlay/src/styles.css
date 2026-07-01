@@ -25,7 +25,6 @@ body {
 
 button {
   font: inherit;
-  -webkit-app-region: no-drag;
 }
 
 .overlay-stage,
@@ -49,6 +48,8 @@ button {
 .assistant-panel {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
   color: #eee7db;
   background: linear-gradient(155deg, rgba(20, 24, 27, 0.97), rgba(7, 11, 16, 0.96));
   border: 1px solid rgba(184, 137, 72, 0.74);
@@ -61,7 +62,6 @@ button {
   position: relative;
   overflow: hidden;
   cursor: move;
-  -webkit-app-region: drag;
 }
 
 .assistant-panel::before,
@@ -148,7 +148,6 @@ button {
 .window-controls {
   display: flex;
   align-items: center;
-  -webkit-app-region: no-drag;
 }
 
 .header-actions {
@@ -170,7 +169,6 @@ button {
   border-radius: 6px;
   background: rgba(20, 18, 16, 0.72);
   cursor: pointer;
-  -webkit-app-region: no-drag;
 }
 
 .window-control:hover,
@@ -196,20 +194,64 @@ button {
   stroke-linecap: round;
 }
 
-.settings-placeholder {
+.settings-panel {
   position: absolute;
   z-index: 2;
   top: 66px;
   right: 20px;
-  padding: 7px 11px;
+  width: min(270px, calc(100% - 40px));
+  padding: 12px;
   color: #e8d2ae;
   border: 1px solid rgba(184, 137, 72, 0.55);
-  border-radius: 6px;
+  border-radius: 10px;
   background: rgba(20, 16, 12, 0.96);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
   font-size: 12px;
-  pointer-events: none;
-  -webkit-app-region: no-drag;
+  pointer-events: auto;
+}
+
+.settings-panel-title {
+  margin-bottom: 9px;
+  color: #f0d39f;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.settings-status {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 11px;
+}
+
+.settings-status div {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 8px;
+}
+
+.settings-status dt {
+  color: #b4aa9a;
+}
+
+.settings-status dd {
+  margin: 0;
+  color: #e9d4af;
+}
+
+.settings-init {
+  width: 100%;
+  padding: 8px 10px;
+  color: #10201d;
+  border: 0;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #57d6bd, #d7a75c);
+  cursor: pointer;
+}
+
+.settings-init:hover,
+.settings-init:focus-visible {
+  filter: brightness(1.08);
+  outline: none;
 }
 
 .ornament {
@@ -230,14 +272,24 @@ button {
 }
 
 .recommendation h2 {
+  flex: 0 0 auto;
   font-size: 20px;
   color: #efd09a;
   margin: 7px 0 14px;
   padding-left: 8px;
 }
 
+.recommendation {
+  min-height: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
 .action-scroll {
-  max-height: 258px;
+  min-height: 150px;
+  max-height: none;
+  flex: 1 1 auto;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: 5px;
@@ -251,7 +303,6 @@ button {
   background-size: 100% 34px, 100% 34px, 100% 100%;
   scrollbar-color: rgba(214, 163, 93, 0.68) rgba(8, 15, 18, 0.62);
   scrollbar-width: thin;
-  -webkit-app-region: no-drag;
 }
 
 .action-scroll:focus-visible {
@@ -355,6 +406,7 @@ button {
 }
 
 .confidence {
+  flex: 0 0 auto;
   display: grid;
   grid-template-columns: 42px 1fr auto;
   align-items: center;
@@ -386,6 +438,7 @@ button {
 }
 
 .reason {
+  flex: 0 0 auto;
   margin-top: 12px;
   padding: 14px 16px;
   border-left: 2px solid #b68243;
@@ -406,6 +459,7 @@ button {
 }
 
 .alternative {
+  flex: 0 0 auto;
   width: 100%;
   display: grid;
   grid-template-columns: 38px 1fr 18px;
@@ -419,7 +473,6 @@ button {
   border-radius: 9px;
   background: rgba(17, 24, 34, 0.75);
   cursor: pointer;
-  -webkit-app-region: no-drag;
   transition: border-color 160ms ease, background 160ms ease;
 }
 
@@ -480,6 +533,7 @@ button {
 }
 
 .assistant-panel footer {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -505,9 +559,21 @@ kbd {
   background: rgba(25, 19, 13, 0.55);
 }
 
-@media (max-height: 690px) {
+@media (max-height: 640px) {
   .assistant-panel {
-    transform: scale(0.88);
+    padding: 18px 16px 12px;
+  }
+
+  .panel-header {
+    padding-bottom: 12px;
+  }
+
+  .reason {
+    padding: 10px 12px;
+  }
+
+  .alternative {
+    padding: 10px 12px;
   }
 }
 

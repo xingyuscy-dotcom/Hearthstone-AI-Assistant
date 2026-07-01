@@ -20,9 +20,14 @@ export function App() {
   const [seconds, setSeconds] = useState(72);
   const [alternativeOpen, setAlternativeOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [initMessage, setInitMessage] = useState("等待初始化");
   const [overlayMode, setOverlayMode] = useState<OverlayModePayload>({
     mode: "standalone",
     label: "等待炉石启动",
+    bounds: {
+      width: 0,
+      height: 0,
+    },
   });
   const previewMode = useMemo(
     () => new URLSearchParams(window.location.search).has("preview"),
@@ -92,7 +97,36 @@ export function App() {
           </div>
         </header>
 
-        {settingsOpen && <div className="settings-placeholder" role="status">设置功能开发中</div>}
+        {settingsOpen && (
+          <section className="settings-panel" aria-label="设置面板">
+            <div className="settings-panel-title">设置</div>
+            <dl className="settings-status">
+              <div>
+                <dt>当前模式</dt>
+                <dd>{overlayMode.label}</dd>
+              </div>
+              <div>
+                <dt>窗口尺寸</dt>
+                <dd>
+                  {overlayMode.bounds.width > 0
+                    ? `${overlayMode.bounds.width} × ${overlayMode.bounds.height}`
+                    : "自适应中"}
+                </dd>
+              </div>
+              <div>
+                <dt>初始化状态</dt>
+                <dd>{initMessage}</dd>
+              </div>
+            </dl>
+            <button
+              className="settings-init"
+              type="button"
+              onClick={() => setInitMessage("初始化设置功能待接入")}
+            >
+              初始化设置
+            </button>
+          </section>
+        )}
 
         <div className="ornament" aria-hidden="true"><span /></div>
 

@@ -1,6 +1,10 @@
 type OverlayModePayload = {
   mode: "standalone" | "attached";
   label: string;
+  bounds: {
+    width: number;
+    height: number;
+  };
 };
 
 interface Window {
