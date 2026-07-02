@@ -1,9 +1,25 @@
 import { app, BrowserWindow, globalShortcut, ipcMain, screen } from "electron";
-import { appendFileSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  closeSync,
+  readdirSync,
+  existsSync,
+  openSync,
+  readSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 type OverlayMode = "standalone" | "attached";
+
+type PageState = {
+  mode: string | null;
+  label: string;
+  inGame: boolean;
+};
 
 type WindowInfo = {
   title: string;
@@ -23,6 +39,13 @@ type GetWindowsApi = {
 const rendererPath = path.join(__dirname, "../renderer/index.html");
 const preloadPath = path.join(__dirname, "preload.js");
 const runtimeLogPath = path.join(process.cwd(), "floating-runtime.log");
+const localAppDataLoadingScreenLogPath = path.join(
+  process.env.LOCALAPPDATA ?? path.join(os.homedir(), "AppData", "Local"),
+  "Blizzard",
+  "Hearthstone",
+  "Logs",
+  "LoadingScreen.log",
+);
 const loadGetWindows = new Function("return import('get-windows')") as () => Promise<GetWindowsApi>;
 const overlaySizeLimit = {
   minWidth: 320,
@@ -37,6 +60,7 @@ let manuallyVisible = true;
 let polling = false;
 let overlayMode: OverlayMode = "standalone";
 let lastGameBounds: Bounds | null = null;
+let lastGameWindow: WindowInfo | null = null;
 let userOffset: { x: number; y: number } | null = null;
 let standaloneBounds: Bounds | null = null;
 let dragStart:
@@ -52,12 +76,137 @@ let dragStart:
 let dragTimer: NodeJS.Timeout | null = null;
 let sizeContextKey: string | null = null;
 let stableOverlaySize: Size | null = null;
+let pageState: PageState = {
+  mode: null,
+  label: "等待页面状态",
+  inGame: false,
+};
 
 writeFileSync(runtimeLogPath, "", "utf8");
 
 function logRuntime(event: string, details?: unknown) {
   const suffix = details === undefined ? "" : ` ${JSON.stringify(details)}`;
   appendFileSync(runtimeLogPath, `[${new Date().toISOString()}] ${event}${suffix}\n`, "utf8");
+}
+
+function getPageLabel(mode: string | null) {
+  if (!mode) return "等待页面状态";
+
+  const labels: Record<string, string> = {
+    GAMEPLAY: "战斗中",
+    HUB: "主页面",
+    COLLECTIONMANAGER: "收藏",
+    PACKOPENING: "开包",
+    TOURNAMENT: "对战选择",
+    DRAFT: "竞技场",
+    TAVERN_BRAWL: "乱斗",
+    BACON: "酒馆战棋",
+    GAME_MODE: "模式选择",
+    ADVENTURE: "冒险",
+    FRIENDLY: "好友对战",
+  };
+
+  return labels[mode] ?? "未知页面";
+}
+
+function sendPageStateToRenderer() {
+  floatingWindow?.webContents.send("page-state-changed", pageState);
+}
+
+function setPageState(nextState: PageState) {
+  if (
+    pageState.mode === nextState.mode &&
+    pageState.label === nextState.label &&
+    pageState.inGame === nextState.inGame
+  ) {
+    return;
+  }
+
+  pageState = nextState;
+  logRuntime("page-state", nextState);
+  sendPageStateToRenderer();
+}
+
+function readFileTail(filePath: string, maxBytes: number) {
+  const stats = statSync(filePath);
+  const start = Math.max(0, stats.size - maxBytes);
+  const length = stats.size - start;
+  const buffer = Buffer.alloc(length);
+  const fd = openSync(filePath, "r");
+
+  try {
+    readSync(fd, buffer, 0, length, start);
+  } finally {
+    closeSync(fd);
+  }
+
+  return buffer.toString("utf8");
+}
+
+function getLatestLoadingScreenLogPathFromGame(gameWindow?: WindowInfo) {
+  if (!gameWindow?.owner.path) return null;
+
+  const gameDirectory = path.dirname(gameWindow.owner.path);
+  const logsDirectory = path.join(gameDirectory, "Logs");
+  if (!existsSync(logsDirectory)) return null;
+
+  const sessionDirectories = readdirSync(logsDirectory, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && /^Hearthstone_/i.test(entry.name))
+    .map((entry) => {
+      const directoryPath = path.join(logsDirectory, entry.name);
+      const loadingLogPath = path.join(directoryPath, "LoadingScreen.log");
+      if (!existsSync(loadingLogPath)) return null;
+      const logStats = statSync(loadingLogPath);
+      return {
+        loadingLogPath,
+        logSize: logStats.size,
+        lastWriteTime: statSync(directoryPath).mtimeMs,
+      };
+    })
+    .filter((entry): entry is { loadingLogPath: string; logSize: number; lastWriteTime: number } =>
+      Boolean(entry),
+    )
+    .sort((left, right) => right.lastWriteTime - left.lastWriteTime);
+
+  return (
+    sessionDirectories.find((entry) => entry.logSize > 0)?.loadingLogPath ??
+    sessionDirectories[0]?.loadingLogPath ??
+    null
+  );
+}
+
+function getLoadingScreenLogPath(gameWindow?: WindowInfo) {
+  const installLogPath = getLatestLoadingScreenLogPathFromGame(gameWindow);
+  if (installLogPath) return installLogPath;
+  if (existsSync(localAppDataLoadingScreenLogPath)) return localAppDataLoadingScreenLogPath;
+  return null;
+}
+
+function parseLatestPageMode(logText: string) {
+  const matches = [...logText.matchAll(/\b(?:currMode|nextMode)=([A-Z0-9_]+)/g)];
+  const latest = matches.at(-1);
+  return latest?.[1] ?? null;
+}
+
+function syncPageState(gameWindow?: WindowInfo) {
+  try {
+    const loadingScreenLogPath = getLoadingScreenLogPath(gameWindow);
+    if (!loadingScreenLogPath) {
+      setPageState({ mode: null, label: "等待页面状态", inGame: false });
+      return;
+    }
+
+    const latestMode = parseLatestPageMode(readFileTail(loadingScreenLogPath, 64 * 1024));
+    const label = getPageLabel(latestMode);
+    setPageState({
+      mode: latestMode,
+      label,
+      inGame: latestMode === "GAMEPLAY",
+    });
+  } catch (error) {
+    logRuntime("page-state-error", String(error));
+    setPageState({ mode: null, label: "等待页面状态", inGame: false });
+  }
 }
 
 function isHearthstoneWindow(windowInfo: WindowInfo | undefined) {
@@ -182,7 +331,10 @@ function createFloatingWindow() {
   });
 
   void floatingWindow.loadURL(pathToFileURL(rendererPath).toString());
-  floatingWindow.webContents.on("did-finish-load", sendModeToRenderer);
+  floatingWindow.webContents.on("did-finish-load", () => {
+    sendModeToRenderer();
+    sendPageStateToRenderer();
+  });
   floatingWindow.on("resize", sendModeToRenderer);
   floatingWindow.on("move", () => {
     if (!floatingWindow || dragStart) return;
@@ -304,6 +456,7 @@ async function syncWithHearthstone() {
     );
 
     if (!gameWindow) {
+      lastGameWindow = null;
       setOverlayMode("standalone");
 
       if (!manuallyVisible) {
@@ -331,6 +484,9 @@ async function syncWithHearthstone() {
       }
       return;
     }
+
+    lastGameWindow = gameWindow;
+    syncPageState(gameWindow);
 
     if (overlayMode !== "attached") {
       logRuntime("game-detected");
@@ -402,7 +558,9 @@ app.whenReady().then(() => {
   });
 
   void syncWithHearthstone();
+  syncPageState(lastGameWindow ?? undefined);
   setInterval(() => void syncWithHearthstone(), 750);
+  setInterval(() => syncPageState(lastGameWindow ?? undefined), 1000);
 });
 
 app.on("will-quit", () => {

@@ -9,6 +9,12 @@ type OverlayModePayload = {
   };
 };
 
+type PageStatePayload = {
+  mode: string | null;
+  label: string;
+  inGame: boolean;
+};
+
 contextBridge.exposeInMainWorld("hearthstoneOverlay", {
   onModeChanged(callback: (payload: OverlayModePayload) => void) {
     const listener = (_event: Electron.IpcRendererEvent, payload: OverlayModePayload) => {
@@ -16,6 +22,13 @@ contextBridge.exposeInMainWorld("hearthstoneOverlay", {
     };
     ipcRenderer.on("overlay-mode-changed", listener);
     return () => ipcRenderer.removeListener("overlay-mode-changed", listener);
+  },
+  onPageStateChanged(callback: (payload: PageStatePayload) => void) {
+    const listener = (_event: Electron.IpcRendererEvent, payload: PageStatePayload) => {
+      callback(payload);
+    };
+    ipcRenderer.on("page-state-changed", listener);
+    return () => ipcRenderer.removeListener("page-state-changed", listener);
   },
   close() {
     ipcRenderer.send("overlay-close");

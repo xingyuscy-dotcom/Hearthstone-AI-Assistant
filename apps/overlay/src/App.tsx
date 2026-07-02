@@ -21,6 +21,11 @@ export function App() {
   const [alternativeOpen, setAlternativeOpen] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [initMessage, setInitMessage] = useState("等待初始化");
+  const [pageState, setPageState] = useState<PageStatePayload>({
+    mode: null,
+    label: "等待页面状态",
+    inGame: false,
+  });
   const [overlayMode, setOverlayMode] = useState<OverlayModePayload>({
     mode: "standalone",
     label: "等待炉石启动",
@@ -45,9 +50,14 @@ export function App() {
     return window.hearthstoneOverlay?.onModeChanged(setOverlayMode);
   }, []);
 
+  useEffect(() => {
+    return window.hearthstoneOverlay?.onPageStateChanged(setPageState);
+  }, []);
+
   const timeText = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(
     seconds % 60,
   ).padStart(2, "0")}`;
+  const headerStatusText = pageState.inGame ? timeText : pageState.label;
 
   return (
     <main className={previewMode ? "preview-stage" : "overlay-stage"}>
@@ -61,11 +71,11 @@ export function App() {
             </p>
           </div>
           <div className="header-actions">
-            <time aria-label="回合剩余时间">
+            <time aria-label={pageState.inGame ? "回合剩余时间" : "当前炉石页面"}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M7 3h10M7 21h10M8 3c0 4 2 5 4 7 2-2 4-3 4-7M8 21c0-4 2-5 4-7 2 2 4 3 4 7" />
               </svg>
-              {timeText}
+              {headerStatusText}
             </time>
             <div className="window-controls">
               <button
@@ -116,6 +126,10 @@ export function App() {
               <div>
                 <dt>初始化状态</dt>
                 <dd>{initMessage}</dd>
+              </div>
+              <div>
+                <dt>当前页面</dt>
+                <dd>{pageState.label}</dd>
               </div>
             </dl>
             <button
